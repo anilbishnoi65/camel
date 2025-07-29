@@ -5,526 +5,367 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Camel.ai</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --bg-primary: #131314;
+            --bg-secondary: #1e1f20;
+            --bg-tertiary: #2a2b2c;
+            --text-primary: #e3e3e3;
+            --text-secondary: #a0a0a0;
+            --border-color: #4a4a4a;
+            --accent-color: #f6b272;
+            --accent-gradient: linear-gradient(45deg, #f6b272, #f6d372);
+        }
+
+        html.light {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f0f2f5;
+            --bg-tertiary: #e4e6eb;
+            --text-primary: #050505;
+            --text-secondary: #65676b;
+            --border-color: #ced0d4;
+        }
+
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #131314;
-            color: #e3e3e3;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
             overflow: hidden;
         }
 
         .gradient-bg {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            background: radial-gradient(circle at 10% 20%, rgba(246, 178, 114, 0.15), transparent 40%),
-                        radial-gradient(circle at 90% 80%, rgba(246, 211, 114, 0.15), transparent 40%);
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
+            background: radial-gradient(circle at 10% 20%, var(--accent-color), transparent 40%),
+                        radial-gradient(circle at 90% 80%, var(--accent-color), transparent 40%);
+            opacity: 0.15;
             animation: animate-gradient 15s ease-in-out infinite;
         }
 
         @keyframes animate-gradient {
-            0% { background-position: 0% 50%; }
+            0%, 100% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
         }
 
         ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #1e1f20; }
-        ::-webkit-scrollbar-thumb { background: #4a4a4a; border-radius: 4px; }
+        ::-webkit-scrollbar-track { background: var(--bg-secondary); }
+        ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #5a5a5a; }
 
-        .prompt-input {
-            transition: all 0.3s ease;
-        }
-        .prompt-input:focus {
-            outline: none;
-            border-color: #f6b272;
-            box-shadow: 0 0 0 2px rgba(246, 178, 114, 0.3);
-        }
-        .prompt-input:disabled {
-            cursor: not-allowed;
-            background-color: #2a2b2c;
-        }
+        .prompt-input { background-color: var(--bg-secondary); border: 1px solid var(--border-color); transition: all 0.3s ease; }
+        .prompt-input:focus { outline: none; border-color: var(--accent-color); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-color) 30%, transparent); }
+        .prompt-input:disabled { cursor: not-allowed; background-color: var(--bg-tertiary); }
 
-        .send-button {
-            transition: all 0.3s ease;
-        }
-        .send-button:hover:not(:disabled) {
-            transform: scale(1.1);
-            box-shadow: 0 4px 15px rgba(246, 190, 114, 0.4);
-        }
-        .send-button:disabled {
-            cursor: not-allowed;
-            background: #4a4a4a;
-            transform: none;
-            box-shadow: none;
-        }
+        .send-button { background: var(--accent-gradient); transition: all 0.3s ease; }
+        .send-button:hover:not(:disabled) { transform: scale(1.1); box-shadow: 0 4px 15px color-mix(in srgb, var(--accent-color) 40%, transparent); }
+        .send-button:disabled { cursor: not-allowed; background: var(--border-color); transform: none; box-shadow: none; }
         
-        .response-card {
-            background-color: rgba(30, 31, 32, 0.7);
-            backdrop-filter: blur(10px);
-            border: 1px solid #4a4a4a;
-        }
+        .response-card { background-color: color-mix(in srgb, var(--bg-primary) 70%, transparent); backdrop-filter: blur(10px); border: 1px solid var(--border-color); }
+        .user-prompt-card { background-color: var(--bg-secondary); }
         
-        .prose-custom ul { list-style-type: disc; padding-left: 1.5rem; margin-top: 0.5rem; margin-bottom: 0.5rem; }
+        .prose-custom table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; }
+        .prose-custom th, .prose-custom td { border: 1px solid var(--border-color); padding: 8px; }
+        .prose-custom th { background-color: var(--bg-tertiary); }
+        .prose-custom ul, .prose-custom ol { padding-left: 1.5rem; margin: 0.5rem 0; }
         .prose-custom p { margin-bottom: 0.5rem; }
-        .prose-custom strong { color: #fff; }
-        .prose-custom pre { background-color: #1e1f20; padding: 1rem; border-radius: 0.5rem; white-space: pre-wrap; word-wrap: break-word; }
-        .prose-custom code { font-family: 'Courier New', Courier, monospace; }
+        .prose-custom strong { color: var(--text-primary); }
+        .prose-custom pre { background-color: var(--bg-secondary); padding: 1rem; border-radius: 0.5rem; white-space: pre-wrap; word-wrap: break-word; }
+        .prose-custom code:not(pre > code) { background-color: var(--bg-tertiary); padding: 0.2em 0.4em; margin: 0; font-size: 85%; border-radius: 3px; }
 
-        .action-button {
-            background-color: #1e1f20;
-            color: #e3e3e3;
-            border: 1px solid #4a4a4a;
-            padding: 0.5rem 1rem;
-            border-radius: 9999px; /* Make it a pill shape */
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-        .action-button:hover { background-color: #2a2b2c; }
+        .action-button { background-color: var(--bg-tertiary); color: var(--text-primary); border: 1px solid var(--border-color); transition: all 0.2s ease; }
+        .action-button:hover { background-color: color-mix(in srgb, var(--bg-tertiary) 80%, #000); }
         .action-button:active { transform: scale(0.95); }
 
         @keyframes spin { to { transform: rotate(360deg); } }
         .animate-spin { animation: spin 1s linear infinite; }
         
-        @keyframes fade-in {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        @keyframes fade-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .animate-fade-in { animation: fade-in 0.5s ease-out forwards; }
-
-        /* Typing indicator styles */
-        .typing-indicator span {
-            height: 8px;
-            width: 8px;
-            background-color: #a0a0a0;
-            border-radius: 50%;
-            display: inline-block;
-            animation: bounce 1.4s infinite ease-in-out both;
-        }
-        .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
-        .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
-        @keyframes bounce {
-            0%, 80%, 100% { transform: scale(0); }
-            40% { transform: scale(1.0); }
-        }
     </style>
 </head>
 <body class="antialiased">
     <div class="gradient-bg"></div>
     
-    <div class="flex flex-col lg:flex-row h-screen w-screen overflow-hidden">
-        <!-- Main Chat Area -->
-        <div id="chat-area" class="flex flex-col h-full w-full lg:w-full transition-all duration-300">
-            <header class="p-4 flex justify-between items-center flex-shrink-0 border-b border-gray-800">
-                <div class="flex items-center space-x-3">
-                    <!-- New, Improved Camel Logo -->
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M16 10H17.5C18.8807 10 20 8.88071 20 7.5C20 6.11929 18.8807 5 17.5 5H17" stroke="#f6b272" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M4 18V14.5C4 12.0147 6.01472 10 8.5 10H16V18" stroke="#f6b272" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M8.5 10C7.11929 10 6 8.88071 6 7.5C6 6.11929 7.11929 5 8.5 5C9.88071 5 11 6.11929 11 7.5C11 8.88071 9.88071 10 8.5 10Z" stroke="#f6b272" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M4 18H20" stroke="#f6b272" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                    <span class="text-xl font-semibold text-white">Camel.ai</span>
-                </div>
-                <div class="flex items-center space-x-2">
-                    <button id="share-chat-button" class="action-button text-sm" title="Share or export this chat">Share Chat</button>
-                    <button id="new-chat-button" class="action-button text-sm font-medium" title="Start a new chat">New Chat</button>
-                </div>
-            </header>
+    <div class="flex h-screen w-screen overflow-hidden bg-primary">
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col h-full relative">
+            <!-- Main Chat Area -->
+            <div id="chat-area" class="flex flex-col h-full w-full transition-all duration-300">
+                <header class="p-4 flex justify-between items-center flex-shrink-0 border-b border-border-color">
+                    <div class="flex items-center space-x-3">
+                        <div class="flex items-center space-x-2">
+                             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M16 10H17.5C18.8807 10 20 8.88071 20 7.5C20 6.11929 18.8807 5 17.5 5H17" stroke="#f6b272" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M4 18V14.5C4 12.0147 6.01472 10 8.5 10H16V18" stroke="#f6b272" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M8.5 10C7.11929 10 6 8.88071 6 7.5C6 6.11929 7.11929 5 8.5 5C9.88071 5 11 6.11929 11 7.5C11 8.88071 9.88071 10 8.5 10Z" stroke="#f6b272" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M4 18H20" stroke="#f6b272" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            <span class="text-xl font-semibold">Camel.ai</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button id="theme-toggle" class="p-2 rounded-md hover:bg-tertiary" title="Toggle Theme"></button>
+                        <button id="new-chat-button" class="action-button rounded-lg" title="Start New Chat">New Chat</button>
+                    </div>
+                </header>
 
-            <main id="main-content" class="flex-1 flex flex-col items-center p-4 overflow-y-auto">
-                <div id="intro-view" class="text-center my-auto">
-                    <h1 class="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-orange-500 mb-4">
-                        Hello, I'm Camel.ai
-                    </h1>
-                    <p class="text-lg md:text-xl text-gray-400">How can I help you today?</p>
-                </div>
-                <div id="response-area" class="w-full max-w-4xl mt-8 space-y-6"></div>
-            </main>
+                <main id="main-content" class="flex-1 flex flex-col items-center p-4 overflow-y-auto">
+                    <div id="intro-view" class="text-center my-auto">
+                        <h1 class="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-orange-500 mb-4">Hello, I'm Camel.ai</h1>
+                        <p class="text-lg md:text-xl text-text-secondary">How can I help you today?</p>
+                    </div>
+                    <div id="response-area" class="w-full max-w-4xl mt-8 space-y-6"></div>
+                </main>
 
-            <footer class="p-4 w-full max-w-4xl mx-auto flex-shrink-0">
-                <div id="stop-generation-container" class="text-center mb-2 hidden">
-                    <button id="stop-button" class="action-button">Stop Generating</button>
-                </div>
-                <div class="relative flex items-center">
-                    <input type="text" id="prompt-input" class="prompt-input w-full bg-[#1e1f20] border border-gray-700 rounded-full py-3 px-5" placeholder="Enter a prompt here...">
-                    <button id="send-button" class="send-button absolute right-2 top-1/2 -translate-y-1/2 flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500">
-                        <svg id="send-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
-                        <svg id="loading-icon" class="w-5 h-5 animate-spin hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                    </button>
-                </div>
-                <p class="text-xs text-center text-gray-500 mt-3">
-                    Camel.ai may display inaccurate info. Please double-check its responses.
-                </p>
-            </footer>
-        </div>
-
-        <!-- Canvas Area -->
-        <div id="canvas-container" class="hidden flex-col bg-[#1e1f20] border-t-2 lg:border-t-0 lg:border-l-2 border-gray-700 relative transition-all duration-300">
-            <div id="canvas-header" class="p-4 border-b border-gray-700 text-white font-semibold flex justify-between items-center flex-shrink-0">
-                <span>Canvas</span>
-                <button id="copy-code-button" class="action-button" title="Copy code to clipboard">Copy Code</button>
+                <footer class="p-4 w-full max-w-4xl mx-auto flex-shrink-0">
+                    <div id="stop-generation-container" class="text-center mb-2 hidden"><button id="stop-button" class="action-button rounded-lg">Stop Generating</button></div>
+                    <div class="relative flex items-center">
+                        <input type="text" id="prompt-input" class="prompt-input w-full rounded-full py-3 px-5 pr-14" placeholder="Enter a prompt here...">
+                        <button id="send-button" class="send-button absolute right-2 top-1/2 -translate-y-1/2 flex items-center justify-center w-10 h-10 rounded-full">
+                            <svg id="send-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+                            <svg id="loading-icon" class="w-5 h-5 animate-spin hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                        </button>
+                    </div>
+                    <p class="text-xs text-center text-text-secondary mt-3">Camel.ai may display inaccurate info. Please double-check its responses.</p>
+                </footer>
             </div>
-            <div id="canvas-content" class="flex-1 p-4 overflow-auto text-sm text-gray-300"></div>
+
+            <!-- Canvas Area -->
+            <div id="canvas-container" class="hidden flex-col bg-secondary border-t-2 lg:border-t-0 lg:border-l-2 border-border-color relative transition-all duration-300">
+                <div id="canvas-header" class="p-4 border-b border-border-color font-semibold flex justify-between items-center flex-shrink-0">
+                    <span>Canvas</span>
+                    <button id="copy-code-button" class="action-button rounded-lg" title="Copy code to clipboard">Copy Code</button>
+                </div>
+                <div id="canvas-content" class="flex-1 p-4 overflow-auto text-sm"></div>
+            </div>
         </div>
     </div>
 
     <script>
         // --- DOM Elements ---
-        const sendButton = document.getElementById('send-button');
-        const sendIcon = document.getElementById('send-icon');
-        const loadingIcon = document.getElementById('loading-icon');
-        const promptInput = document.getElementById('prompt-input');
-        const mainContent = document.getElementById('main-content');
-        const introView = document.getElementById('intro-view');
-        const responseArea = document.getElementById('response-area');
-        const canvasContainer = document.getElementById('canvas-container');
-        const canvasHeader = document.getElementById('canvas-header');
-        const canvasContent = document.getElementById('canvas-content');
-        const copyCodeButton = document.getElementById('copy-code-button');
-        const chatArea = document.getElementById('chat-area');
-        const newChatButton = document.getElementById('new-chat-button');
-        const shareChatButton = document.getElementById('share-chat-button');
-        const stopButton = document.getElementById('stop-button');
-        const stopContainer = document.getElementById('stop-generation-container');
+        const dom = {
+            themeToggle: document.getElementById('theme-toggle'),
+            chatArea: document.getElementById('chat-area'),
+            mainContent: document.getElementById('main-content'),
+            introView: document.getElementById('intro-view'),
+            responseArea: document.getElementById('response-area'),
+            promptInput: document.getElementById('prompt-input'),
+            sendButton: document.getElementById('send-button'),
+            sendIcon: document.getElementById('send-icon'),
+            loadingIcon: document.getElementById('loading-icon'),
+            stopContainer: document.getElementById('stop-generation-container'),
+            stopButton: document.getElementById('stop-button'),
+            newChatButton: document.getElementById('new-chat-button'),
+            canvas: {
+                container: document.getElementById('canvas-container'),
+                header: document.getElementById('canvas-header'),
+                content: document.getElementById('canvas-content'),
+                copyButton: document.getElementById('copy-code-button'),
+            }
+        };
 
         // --- State ---
-        let chatHistory = [];
-        let abortController = null;
+        let state = {
+            chatHistory: [],
+            abortController: null,
+            theme: localStorage.getItem('camelTheme') || 'dark',
+        };
+
+        const ICONS = {
+            light: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M8 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6m0 1a4 4 0 1 0 0-8 4 4 0 0 0 0 8M8 0a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 0m0 13a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 13m-4-5a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2a.5.5 0 0 1-.5-.5M11 .293a.5.5 0 0 1 .707 0l1.414 1.414a.5.5 0 0 1-.707.707L11 1.707a.5.5 0 0 1 0-.707m-9.193 9.193a.5.5 0 0 1 .707 0l1.414 1.414a.5.5 0 0 1-.707.707L1.707 11a.5.5 0 0 1 0-.707m9.193-.707a.5.5 0 0 1 0 .707l-1.414 1.414a.5.5 0 0 1-.707-.707l1.414-1.414a.5.5 0 0 1 .707 0m-9.193-9.193a.5.5 0 0 1 0 .707L3.121 3.828a.5.5 0 0 1-.707-.707L1.707 1.707.5.5 0 0 1 .707 0z"/></svg>`,
+            dark: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M6 .278a.77.77 0 0 1 .08.858 7.2 7.2 0 0 0-.878 3.46c0 4.021 3.278 7.277 7.318 7.277.527 0 1.04-.055 1.533-.16a.79.79 0 0 1 .81.316.73.73 0 0 1-.031.893A8.35 8.35 0 0 1 8.344 16C3.734 16 0 12.286 0 7.71 0 4.266 2.114 1.312 5.124.06A.75.75 0 0 1 6 .278"/></svg>`
+        };
 
         // --- Event Listeners ---
-        sendButton.addEventListener('click', handleSendPrompt);
-        promptInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleSendPrompt();
-            }
-        });
-        newChatButton.addEventListener('click', () => {
-            localStorage.removeItem('camelChatHistory');
+        dom.sendButton.addEventListener('click', handleSendPrompt);
+        dom.promptInput.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendPrompt(); } });
+        dom.newChatButton.addEventListener('click', () => {
+            localStorage.removeItem('camelSingleChatHistory');
             window.location.reload();
         });
-        shareChatButton.addEventListener('click', handleShareChat);
-        copyCodeButton.addEventListener('click', copyCodeToClipboard);
-        stopButton.addEventListener('click', () => {
-            if (abortController) {
-                abortController.abort();
-            }
-        });
-        responseArea.addEventListener('click', (e) => {
-            if (e.target && e.target.closest('.regenerate-button')) {
-                handleRegenerate(e.target.closest('.response-card'));
-            }
-        });
+        dom.canvas.copyButton.addEventListener('click', copyCodeToClipboard);
+        dom.stopButton.addEventListener('click', () => { if (state.abortController) state.abortController.abort(); });
+        dom.responseArea.addEventListener('click', (e) => { if (e.target.closest('.regenerate-button')) handleRegenerate(e.target.closest('.response-card')); });
+        dom.themeToggle.addEventListener('click', toggleTheme);
 
         // --- Initialization ---
-        window.addEventListener('load', loadChatHistory);
-
-        // --- Functions ---
+        function initialize() {
+            loadChatHistory();
+            applyTheme();
+        }
         
-        function setSendingState(isSending) {
-            promptInput.disabled = isSending;
-            sendButton.disabled = isSending;
-            stopContainer.classList.toggle('hidden', !isSending);
-            sendIcon.classList.toggle('hidden', isSending);
-            loadingIcon.classList.toggle('hidden', !isSending);
-        }
-
-        function handleSendPrompt() {
-            const promptText = promptInput.value.trim();
-            if (!promptText || sendButton.disabled) return;
-
-            promptInput.value = '';
-            
-            if (!introView.classList.contains('hidden')) {
-                introView.classList.add('hidden');
-            }
-
-            chatHistory.push({ role: 'user', text: promptText });
-            displayUserPrompt(promptText);
-            saveChatHistory();
-            
-            getAndDisplayCamelResponse(promptText);
-        }
-
-        function handleRegenerate(responseCardToRemove) {
-            if (sendButton.disabled) return; // Don't allow regeneration while another is in progress
-
-            const lastUserMessage = [...chatHistory].reverse().find(m => m.role === 'user');
-            if (!lastUserMessage) return;
-
-            responseCardToRemove.remove();
-            const lastModelMessageIndex = chatHistory.findLastIndex(m => m.role === 'model');
-            if(lastModelMessageIndex > -1) {
-                chatHistory.splice(lastModelMessageIndex, 1);
-            }
-            saveChatHistory();
-            
-            getAndDisplayCamelResponse(lastUserMessage.text);
-        }
-
-        function displayUserPrompt(promptText) {
-            const userPromptCard = document.createElement('div');
-            userPromptCard.className = 'w-full flex justify-end animate-fade-in';
-            userPromptCard.innerHTML = `
-                <div class="flex items-start gap-3 max-w-xl">
-                    <div class="bg-[#1e1f20] p-4 rounded-xl text-gray-300"><p>${escapeHtml(promptText)}</p></div>
-                    <div class="flex-shrink-0 w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-white font-medium"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
-                </div>
-            `;
-            responseArea.appendChild(userPromptCard);
-            scrollToBottom(mainContent);
-        }
-
-        function displayCamelResponse(responseText, isError = false, isStopped = false) {
-            const responseCard = document.createElement('div');
-            responseCard.className = 'response-card rounded-2xl p-6 animate-fade-in';
-            
-            let content = '';
-            if (isStopped) {
-                content = '<p>Generation stopped.</p>';
-            } else if (isError) {
-                content = '<p>Sorry, something went wrong. Please try again later.</p>';
+        // --- Theme Management ---
+        function applyTheme() {
+            if (state.theme === 'light') {
+                document.documentElement.classList.add('light');
+                dom.themeToggle.innerHTML = ICONS.dark;
             } else {
-                content = formatResponse(responseText);
-            }
-
-            responseCard.innerHTML = `
-                <div class="flex items-start space-x-4">
-                    <div class="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center text-white font-bold">C</div>
-                    <div class="prose-custom text-gray-300 w-full">${content}</div>
-                </div>
-                ${!isError && !isStopped ? `
-                <div class="text-right mt-2">
-                    <button class="regenerate-button p-1 text-gray-400 hover:text-white" title="Regenerate response">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                            <path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2z"/>
-                            <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466"/>
-                        </svg>
-                    </button>
-                </div>` : ''}
-            `;
-            responseArea.appendChild(responseCard);
-            
-            if (responseText && !isError && !isStopped) {
-                 renderResponse(responseText, responseCard.querySelector('.prose-custom'));
-            }
-
-            scrollToBottom(mainContent);
-        }
-        
-        function showTypingIndicator() {
-            const indicator = document.createElement('div');
-            indicator.id = 'typing-indicator';
-            indicator.className = 'response-card rounded-2xl p-6 animate-fade-in';
-            indicator.innerHTML = `
-                <div class="flex items-center space-x-4">
-                    <div class="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center text-white font-bold">C</div>
-                    <div class="typing-indicator">
-                        <span></span><span></span><span></span>
-                    </div>
-                </div>
-            `;
-            responseArea.appendChild(indicator);
-            scrollToBottom(mainContent);
-        }
-
-        function hideTypingIndicator() {
-            const indicator = document.getElementById('typing-indicator');
-            if (indicator) {
-                indicator.remove();
+                document.documentElement.classList.remove('light');
+                dom.themeToggle.innerHTML = ICONS.light;
             }
         }
-
-        async function getAndDisplayCamelResponse(promptText) {
-            setSendingState(true);
-            showTypingIndicator();
-            abortController = new AbortController();
-            
-            try {
-                const payload = { contents: [{ role: "user", parts: [{ text: promptText }] }] };
-                const apiKey = ""; 
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload),
-                    signal: abortController.signal
-                });
-
-                if (!response.ok) throw new Error(`API error: ${response.status}`);
-
-                const result = await response.json();
-                
-                let text = "Sorry, I could not get a response.";
-                if (result.candidates && result.candidates[0]?.content?.parts[0]?.text) {
-                    text = result.candidates[0].content.parts[0].text;
-                }
-                
-                hideTypingIndicator();
-                displayCamelResponse(text);
-                chatHistory.push({ role: 'model', text: text });
-                saveChatHistory();
-
-            } catch (error) {
-                hideTypingIndicator();
-                if (error.name === 'AbortError') {
-                    console.log("Fetch aborted by user.");
-                    displayCamelResponse(null, false, true);
-                } else {
-                    console.error("Error fetching Camel.ai response:", error);
-                    displayCamelResponse(null, true, false);
-                }
-            } finally {
-                setSendingState(false);
-                abortController = null;
-            }
+        function toggleTheme() {
+            state.theme = state.theme === 'light' ? 'dark' : 'light';
+            localStorage.setItem('camelTheme', state.theme);
+            applyTheme();
         }
 
-        function renderResponse(text, targetElement) {
-            const codeBlockRegex = /```(\w*)\n([\s\S]*?)```/g;
-            const codeMatch = codeBlockRegex.exec(text);
-
-            if (codeMatch) {
-                const code = codeMatch[2];
-                const textBeforeCode = text.substring(0, codeMatch.index);
-                const textAfterCode = text.substring(codeBlockRegex.lastIndex);
-
-                targetElement.innerHTML = formatResponse(textBeforeCode + textAfterCode);
-                showCanvas();
-                canvasContent.innerHTML = `<pre><code class="language-${codeMatch[1] || 'plaintext'}">${escapeHtml(code)}</code></pre>`;
-            } else {
-                targetElement.innerHTML = formatResponse(text);
-                hideCanvas();
-            }
-        }
-
-        function formatResponse(text) {
-            let html = escapeHtml(text)
-                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                .replace(/\*(.*?)\*/g, '<em>$1</em>')
-                .replace(/^# (.*$)/gim, '<h1>$1</h1>')
-                .replace(/^## (.*$)/gim, '<h2>$1</h2>')
-                .replace(/\n/g, '<br>');
-            
-            if (text.includes('* ')) {
-                html = html.replace(/(\* (.*?)<br>)/g, '<li>$2</li>');
-                html = `<ul>${html.replace(/<br>/g, '')}</ul>`;
-            }
-            return `<p>${html.replace(/<br>\s*<br>/g, '</p><p>')}</p>`;
-        }
-
-        function showCanvas() {
-            // --- Mobile: chat is top half, canvas is bottom half ---
-            chatArea.classList.remove('h-full');
-            chatArea.classList.add('h-1/2');
-            
-            // --- Desktop: chat is left half, canvas is right half ---
-            chatArea.classList.remove('lg:w-full');
-            chatArea.classList.add('lg:w-1/2');
-            
-            canvasContainer.classList.remove('hidden');
-            canvasContainer.classList.add('flex', 'h-1/2', 'lg:h-full', 'w-full', 'lg:w-1/2');
-            canvasHeader.classList.remove('hidden');
-        }
-
-        function hideCanvas() {
-            chatArea.classList.add('h-full');
-            chatArea.classList.remove('h-1/2');
-            
-            chatArea.classList.add('lg:w-full');
-            chatArea.classList.remove('lg:w-1/2');
-
-            canvasContainer.classList.add('hidden');
-            canvasContainer.classList.remove('flex', 'h-1/2', 'lg:h-full', 'w-full', 'lg:w-1/2');
-            canvasHeader.classList.add('hidden');
-        }
-        
-        function copyCodeToClipboard() {
-            const codeEl = canvasContent.querySelector('code');
-            if (codeEl) {
-                const codeText = codeEl.innerText;
-                const textArea = document.createElement('textarea');
-                textArea.value = codeText;
-                textArea.style.position = 'fixed';
-                textArea.style.left = '-9999px';
-                document.body.appendChild(textArea);
-                textArea.select();
-                try {
-                    document.execCommand('copy');
-                    copyCodeButton.innerText = 'Copied!';
-                    setTimeout(() => { copyCodeButton.innerText = 'Copy Code'; }, 2000);
-                } catch (err) {
-                    console.error('Failed to copy text: ', err);
-                }
-                document.body.removeChild(textArea);
-            }
-        }
-        
-        function handleShareChat() {
-            if (chatHistory.length === 0) {
-                const originalText = shareChatButton.innerText;
-                shareChatButton.innerText = 'Empty Chat!';
-                setTimeout(() => {
-                    shareChatButton.innerText = originalText;
-                }, 2000);
-                return;
-            }
-
-            const chatText = chatHistory.map(msg => {
-                return `${msg.role.charAt(0).toUpperCase() + msg.role.slice(1)}:\n${msg.text}`;
-            }).join('\n\n' + '-'.repeat(30) + '\n\n');
-
-            const blob = new Blob([chatText], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `camel-ai-chat-${new Date().toISOString()}.txt`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        }
-
-        function saveChatHistory() {
-            localStorage.setItem('camelChatHistory', JSON.stringify(chatHistory));
-        }
-
+        // --- Chat History Management ---
         function loadChatHistory() {
-            const savedHistory = localStorage.getItem('camelChatHistory');
-            if (savedHistory) {
-                chatHistory = JSON.parse(savedHistory);
-                if (chatHistory.length > 0) {
-                    introView.classList.add('hidden');
-                    chatHistory.forEach(message => {
-                        if (message.role === 'user') {
-                            displayUserPrompt(message.text);
-                        } else if (message.role === 'model') {
-                            displayCamelResponse(message.text);
-                        }
+            const history = localStorage.getItem('camelSingleChatHistory');
+            if (history) {
+                state.chatHistory = JSON.parse(history);
+                if (state.chatHistory.length > 0) {
+                    dom.introView.classList.add('hidden');
+                    state.chatHistory.forEach(msg => {
+                        if (msg.role === 'user') displayUserPrompt(msg.text);
+                        else if (msg.role === 'model') displayCamelResponse(msg.text);
                     });
                 }
             }
         }
-
-        function scrollToBottom(element) {
-            element.scrollTop = element.scrollHeight;
+        function saveChatHistory() {
+            localStorage.setItem('camelSingleChatHistory', JSON.stringify(state.chatHistory));
+        }
+        
+        // --- UI Rendering ---
+        function setSendingState(isSending) {
+            dom.promptInput.disabled = isSending;
+            dom.sendButton.disabled = isSending;
+            dom.stopContainer.classList.toggle('hidden', !isSending);
+            dom.sendIcon.classList.toggle('hidden', isSending);
+            dom.loadingIcon.classList.toggle('hidden', !isSending);
         }
 
-        function escapeHtml(unsafe) {
-            return unsafe
-                 .replace(/&/g, "&amp;")
-                 .replace(/</g, "&lt;")
-                 .replace(/>/g, "&gt;")
-                 .replace(/"/g, "&quot;")
-                 .replace(/'/g, "&#039;");
+        // --- Core Chat Logic ---
+        function handleSendPrompt() {
+            const promptText = dom.promptInput.value.trim();
+            if (!promptText || dom.sendButton.disabled) return;
+            dom.promptInput.value = '';
+            dom.introView.classList.add('hidden');
+
+            state.chatHistory.push({ role: 'user', text: promptText });
+            displayUserPrompt(promptText);
+            getAndDisplayCamelResponse(promptText);
+            saveChatHistory();
         }
+        function handleRegenerate(responseCardToRemove) {
+            if (dom.sendButton.disabled) return;
+            const lastUserMessage = [...state.chatHistory].reverse().find(m => m.role === 'user');
+            if (!lastUserMessage) return;
+
+            responseCardToRemove.remove();
+            const lastModelMessageIndex = state.chatHistory.findLastIndex(m => m.role === 'model');
+            if(lastModelMessageIndex > -1) state.chatHistory.splice(lastModelMessageIndex, 1);
+            
+            getAndDisplayCamelResponse(lastUserMessage.text);
+            saveChatHistory();
+        }
+
+        function displayUserPrompt(promptText) {
+            const card = document.createElement('div');
+            card.className = 'w-full flex justify-end animate-fade-in';
+            card.innerHTML = `<div class="flex items-start gap-3 max-w-xl"><div class="user-prompt-card p-4 rounded-xl"><p>${escapeHtml(promptText)}</p></div></div>`;
+            dom.responseArea.appendChild(card);
+            scrollToBottom(dom.mainContent);
+        }
+        function displayCamelResponse(responseText, isError = false, errorMessage = '', isStopped = false) {
+            const card = document.createElement('div');
+            card.className = 'response-card rounded-2xl p-6 animate-fade-in';
+            let content = '';
+            if (isStopped) {
+                content = '<p>Generation stopped.</p>';
+            } else if (isError) {
+                content = `<p class="text-red-400">Sorry, something went wrong.</p><p class="text-xs text-text-secondary mt-2">${escapeHtml(errorMessage)}</p>`;
+            } else {
+                content = formatResponse(responseText);
+            }
+            card.innerHTML = `<div class="flex items-start space-x-4"><div class="prose-custom w-full">${content}</div></div>
+                ${!isError && !isStopped ? `<div class="text-right mt-2"><button class="regenerate-button p-1 text-text-secondary hover:text-text-primary" title="Regenerate response"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2z"/><path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466"/></svg></button></div>` : ''}`;
+            dom.responseArea.appendChild(card);
+            
+            if (responseText && !isError && !isStopped && responseText.includes('```')) {
+                renderCodeInCanvas(responseText);
+            } else {
+                hideCanvas();
+            }
+            scrollToBottom(dom.mainContent);
+        }
+
+        async function getAndDisplayCamelResponse(promptText) {
+            setSendingState(true);
+            state.abortController = new AbortController();
+            
+            try {
+                const payload = { contents: [{ role: "user", parts: [{ text: promptText }] }] };
+                const apiKey = "AIzaSyAtTuq0IXM5U0xqc1tA4I0ywE7Ey5dbRgY";
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
+                const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload), signal: state.abortController.signal });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`API Error (${response.status}): ${errorData.error?.message || response.statusText}`);
+                }
+
+                const result = await response.json();
+                const text = result.candidates?.[0]?.content?.parts?.[0]?.text || "Sorry, I could not get a valid response.";
+                
+                state.chatHistory.push({ role: 'model', text });
+                displayCamelResponse(text);
+                saveChatHistory();
+            } catch (error) {
+                if (error.name === 'AbortError') {
+                    displayCamelResponse(null, false, '', true);
+                } else {
+                    console.error("Error fetching response:", error);
+                    displayCamelResponse(null, true, error.message);
+                }
+            } finally {
+                setSendingState(false);
+                state.abortController = null;
+            }
+        }
+
+        // --- Canvas & Formatting ---
+        function renderCodeInCanvas(text) {
+            const codeBlockRegex = /```(\w*)\n([\s\S]*?)```/g;
+            const match = codeBlockRegex.exec(text);
+            if (match) {
+                const code = match[2];
+                showCanvas();
+                dom.canvas.content.innerHTML = `<pre><code class="language-${match[1] || 'plaintext'}">${escapeHtml(code)}</code></pre>`;
+            }
+        }
+        function formatResponse(text) { return marked.parse(text); }
+        function showCanvas() {
+            dom.chatArea.classList.remove('h-full', 'lg:w-full');
+            dom.chatArea.classList.add('h-1/2', 'lg:w-1/2');
+            dom.canvas.container.classList.remove('hidden');
+            dom.canvas.container.classList.add('flex', 'h-1/2', 'lg:h-full', 'w-full', 'lg:w-1/2');
+        }
+        function hideCanvas() {
+            dom.chatArea.classList.add('h-full', 'lg:w-full');
+            dom.chatArea.classList.remove('h-1/2', 'lg:w-1/2');
+            dom.canvas.container.classList.add('hidden');
+            dom.canvas.container.classList.remove('flex');
+        }
+        function copyCodeToClipboard() {
+            const codeEl = dom.canvas.content.querySelector('code');
+            if (codeEl) {
+                navigator.clipboard.writeText(codeEl.innerText).then(() => {
+                    dom.canvas.copyButton.innerText = 'Copied!';
+                    setTimeout(() => { dom.canvas.copyButton.innerText = 'Copy Code'; }, 2000);
+                }).catch(err => console.error('Failed to copy: ', err));
+            }
+        }
+
+        // --- Utilities ---
+        function scrollToBottom(element) { element.scrollTop = element.scrollHeight; }
+        function escapeHtml(unsafe) { return unsafe.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;"); }
+
+        // --- Start the App ---
+        initialize();
     </script>
 </body>
 </html>
